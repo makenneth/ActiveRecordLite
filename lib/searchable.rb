@@ -13,14 +13,40 @@ module Searchable
   end
 
   def joins(params)
-    DBConnection.execute2(<<-SQL, params)
-      SELECT *
-      FROM #{table_name}
-      INNER JOIN #{params}
-      ON #{table_name}
-    SQL
+    if params.is_a?(Symbol)
+      assoc_options = self.assoc_options[params]
+
+      this_table = table_name
+      join_table_name = assoc_options.table_name
+
+      if assoc_options.is_a? BelongsToOptions
+        primary_key = "#{this_table}.#{assoc_options.foreign_key}"
+        foreign_key = "#{join_table_name}.#{assoc_options.primary_key}"
+      else
+        primary_key = "#{join_table_name}.#{assoc_options.foreign_key}"
+        foreign_key = "#{this_table}.#{assoc_options.primary_key}"
+      end
+
+      results = DBConnection.execute2(<<-SQL).drop(1)
+        SELECT #{this_table}.*
+        FROM #{this_table}
+        INNER JOIN #{join_table_name}
+        ON #{primary_key} = #{foreign_key}
+      SQL
+    else
+      results = DBConnection.execute2(<<-SQL).drop(1)
+        SELECT #{this_table}.*
+        FROM #{this_table}
+        #{params}
+      SQL
+    end
+
+    self.parse_all(results)
   end
 
+  def includes(associations)
+    
+  end
 end
 
 class SQLObject

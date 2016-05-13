@@ -1,7 +1,10 @@
 require_relative 'db_connection'
 require 'active_support/inflector'
+require_relative 'validations'
 
 class SQLObject
+  self.extend Validations
+
   def self.columns
     return @columns if @columns
     query = DBConnection.execute2(<<-SQL)
@@ -94,6 +97,7 @@ class SQLObject
   end
 
   def save
+    
     self.send("id") ? update : insert
   end
 end
