@@ -97,7 +97,23 @@ class SQLObject
   end
 
   def save
-    
+    self.class.validate_options.each do |option, names|
+      raise "#{option} Error" unless self.send(option, names)
+    end
     self.send("id") ? update : insert
+  end
+    def test_uniqueness(name)
+      where_clause = "#{name} = #{self.send(name)}"
+      where_clause << "AND id != #{self.send(:id)}" if self.send(:id)
+
+      query = DBConnection.execute2(<<-SQL).drop(1)
+        SELECT *
+        FROM #{self.table_name}
+        WHERE #{where_clause}
+      SQL
+      p query
+      return false if query.length
+
+      true
   end
 end
