@@ -44,9 +44,6 @@ module Searchable
     self.parse_all(results)
   end
 
-  def includes(associations)
-    
-  end
 end
 
 class SQLObject
